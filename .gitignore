@@ -1,0 +1,6 @@
+# System & temporary files
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+powershell.cmd
