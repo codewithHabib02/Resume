@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResumeForge — Professional Resume Builder</title>
+  <meta name="description" content="Build and download job-ready resumes instantly. Choose between clean ATS Plain and Modern Blue templates." />
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- html2pdf.js Bundle for PDF Generation (with CDN fallback) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    if (!window.html2pdf) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"><\\/script>');
+    }
+  </script>
+
+  <!-- Supabase JS SDK for Email Authentication -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Top App Navigation Bar -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>ResumeForge</h1>
+          <p>Modern Blue &amp; White Resume Builder</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnLoadSample" title="Fill form with example data">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+          Load Sample
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="btnClearForm" title="Reset all fields">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Clear
+        </button>
+        
+        <!-- Supabase Auth Status Section in Header -->
+        <div id="headerAuthSection"></div>
+
+        <button type="button" class="btn btn-primary btn-sm" id="btnDownloadPdf">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="app-container">
+    
+    <!-- LEFT PANEL: FORM BUILDER (COMPACT & COLLAPSIBLE) -->
+    <section class="builder-panel">
+      
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          <span>Resume Details</span>
+        </div>
+        <button type="button" class="btn-toggle-all" id="btnToggleAllSections" title="Expand or collapse all sections">
+          Toggle All
+        </button>
+      </div>
+
+      <!-- Compact Template Switcher Bar -->
+      <div class="template-compact-box">
+        <span class="compact-tpl-label">Template:</span>
+        <div class="template-pill-switcher">
+          <button type="button" class="tpl-pill-btn" data-template="plain" id="optPlain">
+            <span class="tpl-dot plain-dot"></span>
+            <span>Plain Classic (B&amp;W)</span>
+          </button>
+          <button type="button" class="tpl-pill-btn active" data-template="modern" id="optModern">
+            <span class="tpl-dot modern-dot"></span>
+            <span>Modern Blue</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Form Inputs Container (Scrollable) -->
+      <form id="resumeForm" class="form-body" onsubmit="return false;">
+
+        <!-- 1. Personal Info (Open by default) -->
+        <div class="form-section" id="secPersonal">
+          <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-title-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>Personal Information</span>
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="section-content">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="fullName">Full Name *</label>
+                <input type="text" id="fullName" class="input-control" placeholder="e.g. Alex Morgan" required />
+              </div>
+              <div class="form-group">
+                <label for="jobTitle">Job Title *</label>
+                <input type="text" id="jobTitle" class="input-control" placeholder="e.g. Senior Software Engineer" required />
+              </div>
+              <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" class="input-control" placeholder="e.g. alex@example.com" required />
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" class="input-control" placeholder="e.g. +1 (555) 234-5678" />
+              </div>
+              <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" id="location" class="input-control" placeholder="e.g. San Francisco, CA" />
+              </div>
+              <div class="form-group">
+                <label for="website">Portfolio / Web</label>
+                <input type="text" id="website" class="input-control" placeholder="e.g. alexmorgan.dev" />
+              </div>
+              <div class="form-group">
+                <label for="linkedin">LinkedIn</label>
+                <input type="text" id="linkedin" class="input-control" placeholder="e.g. linkedin.com/in/alexmorgan" />
+              </div>
+              <div class="form-group">
+                <label for="github">GitHub</label>
+                <input type="text" id="github" class="input-control" placeholder="e.g. github.com/alexm" />
+              </div>
+              <div class="form-group col-span-full">
+                <label for="summary">Summary</label>
+                <textarea id="summary" class="textarea-control" rows="2" placeholder="Brief professional overview highlighting key strengths."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Work Experience (Open by default) -->
+        <div class="form-section" id="secExp">
+          <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-title-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+              <span>Work Experience</span>
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="section-content">
+            <div id="experienceList" class="dynamic-list"></div>
+            <button type="button" id="btnAddExp" class="btn-add-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Experience
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Education (Collapsed by default to save space) -->
+        <div class="form-section collapsed" id="secEdu">
+          <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-title-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+              <span>Education</span>
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="section-content">
+            <div id="educationList" class="dynamic-list"></div>
+            <button type="button" id="btnAddEdu" class="btn-add-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Education
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Skills (Collapsed by default to save space) -->
+        <div class="form-section collapsed" id="secSkills">
+          <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-title-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>Skills &amp; Technologies</span>
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="section-content">
+            <div class="form-group">
+              <label for="skills">Comma-separated skills</label>
+              <textarea id="skills" class="textarea-control" rows="2" placeholder="e.g. JavaScript, React, Node.js, Python, AWS, Docker, Git, SQL"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Key Projects (Collapsed by default to save space) -->
+        <div class="form-section collapsed" id="secProj">
+          <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-title-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+              <span>Key Projects</span>
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="section-content">
+            <div id="projectsList" class="dynamic-list"></div>
+            <button type="button" id="btnAddProj" class="btn-add-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Project
+            </button>
+          </div>
+        </div>
+
+        <!-- 6. Certifications (Collapsed by default to save space) -->
+        <div class="form-section collapsed" id="secCert">
+          <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-title-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="7"></circle>
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+              </svg>
+              <span>Certifications &amp; Awards</span>
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div class="section-content">
+            <div id="certList" class="dynamic-list"></div>
+            <button type="button" id="btnAddCert" class="btn-add-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Certification
+            </button>
+          </div>
+        </div>
+
+      </form>
+
+      <!-- Bottom Pinned Generate Button Bar -->
+      <div class="builder-submit-bar">
+        <button type="button" class="btn btn-primary btn-generate" id="btnGenerate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Generate Resume
+        </button>
+        <button type="button" class="btn btn-secondary" id="btnSaveToDashboard" title="Save this resume to your Dashboard">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          Save
+        </button>
+      </div>
+
+    </section>
+
+    <!-- RIGHT PANEL: LIVE PREVIEW & DOWNLOAD -->
+    <section class="preview-panel" id="previewSection">
+      
+      <div class="preview-toolbar">
+        <div class="preview-status">
+          <span class="status-dot"></span>
+          <span>Preview: <strong id="activeTemplateName">Modern Blue</strong></span>
+        </div>
+        <div class="preview-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="btnPrintResume" title="Print or save using browser dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Print
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('btnDownloadPdf').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- A4 Paper Viewport -->
+      <div class="paper-container">
+        <div id="resumePaper" class="resume-paper tpl-modern">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       SUPABASE AUTH MODAL (REQUIRED TO DOWNLOAD PDF)
+       ============================================================ -->
+  <div class="modal-overlay" id="authModalOverlay">
+    <div class="auth-modal">
+      <div class="auth-modal-header">
+        <button type="button" class="btn-close-modal" id="btnCloseAuthModal">✕</button>
+        <div class="auth-icon-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h3 id="authModalTitle">Welcome Back</h3>
+        <p id="authModalDesc">Sign in to download your resume in high-resolution PDF.</p>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tabSignIn">Sign In</button>
+        <button type="button" class="auth-tab" id="tabSignUp">Create Free Account</button>
+      </div>
+
+      <!-- Auth Form -->
+      <form id="authForm" class="auth-modal-body">
+        <input type="hidden" id="authMode" value="signin" />
+
+        <div id="authErrorBox" class="auth-msg-box"></div>
+
+        <div class="form-group">
+          <label for="authEmail">Email Address</label>
+          <input type="email" id="authEmail" class="input-control" placeholder="name@example.com" required autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label for="authPassword">Password</label>
+          <div class="input-pw-wrapper">
+            <input type="password" id="authPassword" class="input-control" placeholder="••••••••" required autocomplete="current-password" minlength="6" />
+            <button type="button" class="btn-toggle-pw" id="btnTogglePassword" title="Show/Hide password">👁</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btnAuthSubmit" style="width: 100%; margin-top: 0.5rem; padding: 0.65rem;">
+          Sign In to Account
+        </button>
+
+        <div class="auth-switch-links">
+          <div id="authFooterSignUp">
+            Don't have an account? <a href="#" id="linkSwitchToSignUp">Create Free Account</a>
+          </div>
+          <div id="authFooterSignIn" style="display:none;">
+            Already have an account? <a href="#" id="linkSwitchToSignIn">Sign In</a>
+          </div>
+        </div>
+
+        <p class="auth-note">
+          🔒 Secured with Supabase Authentication. Free forever.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       USER RESUMES DASHBOARD MODAL
+       ============================================================ -->
+  <div class="modal-overlay" id="dashboardModalOverlay">
+    <div class="dashboard-modal">
+      <div class="dashboard-modal-header">
+        <div class="dash-title-wrap">
+          <div class="dash-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3>My Resumes Dashboard</h3>
+            <p>View, load, edit, and download your saved resumes anytime.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" id="btnCloseDashboardModal">✕</button>
+      </div>
+
+      <div class="dashboard-modal-body">
+        <!-- Cloud Sync Status Banner -->
+        <div id="dashCloudStatus"></div>
+
+        <div id="dashboardResumesList" class="dashboard-resumes-grid">
+          <!-- Dynamically populated by dashboard.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SUPABASE KEY CONNECTOR MODAL
+       ============================================================ -->
+  <div class="modal-overlay" id="supabaseKeyOverlay">
+    <div class="auth-modal">
+      <div class="auth-modal-header">
+        <button type="button" class="btn-close-modal" id="btnCloseKeyModal">✕</button>
+        <div class="auth-icon-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+          </svg>
+        </div>
+        <h3>Connect Supabase Project</h3>
+        <p>Your Supabase database table <strong>public.resumes</strong> is ready! Paste your public anon key to enable live cloud sync.</p>
+      </div>
+      <div class="auth-modal-body">
+        <div class="form-group">
+          <label for="dashInputAnonKey">Supabase Public Anon Key</label>
+          <input type="text" id="dashInputAnonKey" class="input-control" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." />
+          <span style="font-size: 0.72rem; color: var(--slate-500); margin-top: 0.25rem;">
+            Copy from: <strong>Supabase Dashboard &rarr; Project Settings &rarr; API &rarr; anon public</strong>
+          </span>
+        </div>
+        <button type="button" class="btn btn-primary" id="btnSaveKeyFromModal" style="width: 100%; margin-top: 0.5rem; padding: 0.65rem;">
+          Save &amp; Sync to Supabase
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application & Auth Logic -->
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
